@@ -9,6 +9,7 @@ public abstract class DialogueNode : Node
 {
     protected readonly DialogueGraphView graph;
     readonly VisualElement eventsContainer = new();
+    readonly string defaultTitle;
 
     public Port InputPort { get; private set; }
     public TextPart Part => graph.GetPart(this);
@@ -30,6 +31,7 @@ public abstract class DialogueNode : Node
     protected DialogueNode(DialogueGraphView graph, string nodeTitle, Color titleColor, bool hasInput, float width)
     {
         this.graph = graph;
+        defaultTitle = nodeTitle;
         title = nodeTitle;
         style.width = width;
         titleContainer.style.backgroundColor = titleColor;
@@ -44,8 +46,10 @@ public abstract class DialogueNode : Node
 
     public void Initialize()
     {
+        BuildNameField();
         Build();
         extensionContainer.Add(eventsContainer);
+        RefreshTitle();
         RefreshExpandedState();
         RefreshPorts();
     }
@@ -63,6 +67,27 @@ public abstract class DialogueNode : Node
         port.portName = portName;
         port.userData = slot;
         return port;
+    }
+
+    void BuildNameField()
+    {
+        TextField nameField = new("Name") { value = Part.partName ?? string.Empty };
+        nameField.labelElement.style.minWidth = 50;
+        nameField.style.marginTop = 4;
+        nameField.style.marginBottom = 4;
+        nameField.RegisterValueChangedCallback(evt =>
+        {
+            Part.partName = evt.newValue;
+            RefreshTitle();
+            graph.MarkDirty();
+        });
+        extensionContainer.Add(nameField);
+    }
+
+    void RefreshTitle()
+    {
+        string partName = Part.partName;
+        title = string.IsNullOrWhiteSpace(partName) ? defaultTitle : $"{partName.Trim()} ({defaultTitle})";
     }
 
     void AddEventField(SerializedObject serializedObject, SerializedProperty property)

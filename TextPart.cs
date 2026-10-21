@@ -5,6 +5,8 @@ using UnityEngine.Events;
 [Serializable]
 public abstract class TextPart
 {
+    public string partName = string.Empty;
+
     [HideInInspector]
     public Vector2 graphPosition;
 
