@@ -6,6 +6,8 @@ A small toolkit for building branching dialogue in Unity. Dialogue is stored as 
 - **Simple Text**: a line of dialogue that leads to one next part.
 - **Condition Table**: a list of entries, each with a set of `Condition` assets, a priority and a target part. The first matching target (highest priority, random among ties) is chosen at runtime.
 
+- **Options Table**: a list of player choices, each with text, a set of `Condition` assets and a target part. Only the options whose conditions are all true are available, and the one the player selects decides where the dialogue goes next.
+
 Every part can be given a **name**, and every part has `onEnter` / `onExit` `UnityEvent`s that can be wired up from the graph.
 
 ## Prerequisites
@@ -33,7 +35,7 @@ Every part can be given a **name**, and every part has `onEnter` / `onExit` `Uni
 
 | Action | How |
 | --- | --- |
-| Add a part | Right-click an empty area of the graph and choose **Simple Text** or **Condition Table** |
+| Add a part | Right-click an empty area of the graph and choose **Simple Text**, **Condition Table** or **Options Table** |
 | Connect parts | Drag from an output port to the **In** port of another part |
 | Remove a connection | Select the edge and press Delete |
 | Delete a part | Select the node and press Delete (the Entry node cannot be deleted) |
@@ -59,6 +61,13 @@ Every node has a **Name** field at the top of its body.
 - **+** adds a condition slot to the row and **-** removes it. Each slot is a dropdown listing every `Condition` asset found in a `Resources/Conditions` folder.
 - A row is valid only if all of its conditions are true. Among valid rows the highest priority wins, and ties are broken randomly.
 
+### Options Table nodes
+
+- **Add Option** adds a row. Each row has a **Text** field, a **Leads to** port, **Remove** and up/down buttons to reorder.
+- **+** adds a condition slot to the option and **-** removes it. Slots work exactly as in Condition Table nodes.
+- An option is available only if all of its conditions are true. An option with no conditions is always available.
+- Reordering keeps each option's connection.
+
 ### Events
 
 Each node shows `onEnter` and `onExit` event lists at the bottom. They are standard `UnityEvent`s and are invoked by `OnEnter()` and `OnExit()` at runtime. Events serialized in the dialogue asset can only reference other assets, not scene objects, so use them to trigger asset-level behaviour or have your own code subscribe to dialogue progress.
@@ -68,6 +77,7 @@ Each node shows `onEnter` and `onExit` event lists at the bottom. They are stand
 Load the asset, start at `entry`, and move forward with `GetNext()`. Call `GetNext()` only once per step, because a Condition Table picks randomly among equal-priority matches every time it is called.
 
 ```csharp
+using System.Collections.Generic;
 using UnityEngine;
 
 public class DialoguePlayer : MonoBehaviour
@@ -99,10 +109,32 @@ public class DialoguePlayer : MonoBehaviour
                 Debug.Log($"{text.partName}: {text.line}");
                 return;
             }
+
+            if (current is OptionsTable table)
+            {
+                IReadOnlyList<Option> available = table.GetAvailableOptions();
+                for (int i = 0; i < available.Count; i++)
+                {
+                    Debug.Log($"{i}: {available[i].text}");
+                }
+                return;
+            }
         }
+    }
+
+    public void Choose(int index)
+    {
+        if (current is not OptionsTable table) return;
+
+        IReadOnlyList<Option> available = table.GetAvailableOptions();
+        if (index < 0 || index >= available.Count) return;
+
+        if (table.Select(available[index])) Advance();
     }
 }
 ```
+
+An Options Table does not pick its own target. It waits at the table until your code calls `Select` with one of the options returned by `GetAvailableOptions()`, and only then is `GetNext()` valid.
 
 ## Extending the tool
 
@@ -209,6 +241,7 @@ EntryPart.cs              Start of a dialogue
 SimpleText.cs             A line of text
 FullTextAsset.cs          The dialogue ScriptableObject
 ConditionPart/            Condition, ConditionEntry and ConditionTable
+OptionsPart/              Option and OptionsTable
 Editor/
   DialogueEditorWindow.cs Toolbar, create / open / save
   DialogueGraphView.cs    The graph, context menu and link bookkeeping
@@ -216,6 +249,7 @@ Editor/
   EntryNode.cs            Node for EntryPart
   SimpleTextNode.cs       Node for SimpleText
   ConditionTableNode.cs   Node for ConditionTable
+  OptionsTableNode.cs     Node for OptionsTable
   UnsupportedNode.cs      Placeholder for unknown part types
   DialogueAssetUtility.cs Link traversal and asset repair helpers
 ```

@@ -114,6 +114,7 @@ public class DialogueGraphView : GraphView
         Vector2 position = contentViewContainer.WorldToLocal(evt.mousePosition);
         evt.menu.AppendAction("Simple Text", _ => AddPart(new SimpleText(), position));
         evt.menu.AppendAction("Condition Table", _ => AddPart(new ConditionTable(), position));
+        evt.menu.AppendAction("Options Table", _ => AddPart(new OptionsTable(), position));
     }
 
     DialogueNode CreateNode(TextPart part)
@@ -126,6 +127,8 @@ public class DialogueGraphView : GraphView
                 return new SimpleTextNode(this);
             case ConditionTable:
                 return new ConditionTableNode(this);
+            case OptionsTable:
+                return new OptionsTableNode(this);
             default:
                 return new UnsupportedNode(this, part.GetType().Name);
         }

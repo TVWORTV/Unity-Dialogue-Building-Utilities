@@ -20,6 +20,12 @@ public static class DialogueAssetUtility
                     if (conditionEntry.leadsTo != null) yield return conditionEntry.leadsTo;
                 }
                 break;
+            case OptionsTable optionsTable:
+                foreach (Option option in optionsTable.options)
+                {
+                    if (option.leadsTo != null) yield return option.leadsTo;
+                }
+                break;
         }
     }
 
@@ -37,6 +43,12 @@ public static class DialogueAssetUtility
                 foreach (ConditionEntry conditionEntry in table.entries)
                 {
                     if (conditionEntry.leadsTo == target) conditionEntry.leadsTo = null;
+                }
+                break;
+            case OptionsTable optionsTable:
+                foreach (Option option in optionsTable.options)
+                {
+                    if (option.leadsTo == target) option.leadsTo = null;
                 }
                 break;
         }
