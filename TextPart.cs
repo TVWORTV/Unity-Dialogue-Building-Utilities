@@ -6,6 +6,7 @@ using UnityEngine.Events;
 public abstract class TextPart
 {
     public string partName = string.Empty;
+    public Speaker speaker; 
 
     [HideInInspector]
     public Vector2 graphPosition;
