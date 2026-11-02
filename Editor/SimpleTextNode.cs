@@ -31,7 +31,6 @@ public class SimpleTextNode : DialogueNode
     {
         output = CreateOutputPort("Next", 0);
         outputContainer.Add(output);
-
         TextField field = new() { multiline = true, value = ((SimpleText)Part).line };
         field.style.minHeight = 70;
         field.RegisterValueChangedCallback(evt =>
