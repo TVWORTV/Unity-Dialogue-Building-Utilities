@@ -4,7 +4,8 @@ using UnityEngine;
 [Serializable]
 public class SimpleText : TextPart
 {
-    public Speaker speaker; 
+    public Speaker speaker;
+
     [TextArea]
     public string line;
 

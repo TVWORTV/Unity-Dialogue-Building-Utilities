@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -31,6 +32,22 @@ public class SimpleTextNode : DialogueNode
     {
         output = CreateOutputPort("Next", 0);
         outputContainer.Add(output);
+
+        ObjectField speakerField = new("Speaker")
+        {
+            objectType = typeof(Speaker),
+            allowSceneObjects = false,
+            value = ((SimpleText)Part).speaker
+        };
+        speakerField.labelElement.style.minWidth = 50;
+        speakerField.style.marginBottom = 4;
+        speakerField.RegisterValueChangedCallback(evt =>
+        {
+            ((SimpleText)Part).speaker = evt.newValue as Speaker;
+            graph.MarkDirty();
+        });
+        extensionContainer.Add(speakerField);
+
         TextField field = new() { multiline = true, value = ((SimpleText)Part).line };
         field.style.minHeight = 70;
         field.RegisterValueChangedCallback(evt =>
